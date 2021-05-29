@@ -1,0 +1,91 @@
+<template>
+    <lightning-button variant="brand" label="My Cart" title="Primary action" onclick={openCart} class="slds-m-left_x-small"></lightning-button> 
+    
+    <lightning-combobox
+            name="filter"
+            label="Choose a category"
+            value={value}
+            options={options}
+            onchange={handleFilterChange} >
+    </lightning-combobox>
+    <div style="height: auto;">
+        <lightning-datatable
+            key-field="id"
+            data={products}
+            columns={productColumns}
+            show-row-number-column
+            hide-checkbox-column
+            onrowaction={handleRowAction}>
+        </lightning-datatable>
+    </div>
+    <template if:true={isModalOpen}>
+        <!-- Modal/Popup Box LWC starts here -->
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Box LWC header here -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Product INFO</h2>
+                </header>
+                <!-- Modal/Popup Box LWC body starts here -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>{displayProductName}</p>
+                    <p>Description: {displayProductDescription}</p>
+                    <p>Unit cost: {displayProductUnitCost} $</p>
+                    <p>Total cost: {displayTotalCost} $</p>
+                    <p>Available quantity: {displayProductQuantity}</p>
+                    <p>Select product quantity: {displayChoosenQuantity}</p>
+                    <lightning-button label="-" title="Non-primary action" onclick={decreaseQuantityAndTotalCost} class="slds-m-left_x-small"></lightning-button>
+                    <lightning-button label="+" title="Non-primary action" onclick={increaseQuantityAndTotalCost} class="slds-m-left_x-small"></lightning-button>
+                </div>
+                <!-- Modal/Popup Box LWC footer starts here -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModal} title="Cancel">Cancel</button>
+                    <button class="slds-button slds-button_brand" onclick={submitDetails} title="OK">Submit</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <template if:true={isInsertSuccessfull}>
+        Product was successfully added to the cart!
+    </template>
+    <template if:true={isModalOpenCart}>
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-02" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModalCart}>
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">My Cart</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                    <div style="height: auto;">
+                    <lightning-datatable
+                        key-field="id"
+                        data={orderItems}
+                        columns={cartColumns}
+                        show-row-number-column
+                        hide-checkbox-column
+                        onrowaction={handleRowActionOrderItem}>
+                    </lightning-datatable> 
+                    </div> 
+                </div>
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModalCart} title="Cancel">Close</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
