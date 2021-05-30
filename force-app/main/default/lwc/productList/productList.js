@@ -4,11 +4,7 @@ import createOrderItem from '@salesforce/apex/ProductController.createOrderItem'
 import getOrderItemList from '@salesforce/apex/ProductController.getOrderItemList';
 import clearOrderItem from '@salesforce/apex/ProductController.clearOrderItem';
 import createOrder from '@salesforce/apex/ProductController.createOrder';
-
-const actions = [
-    { label: 'Buy', name: 'buy' },
-    { label: 'Clear', name: 'clear' },
-];
+import updateOrderItem from '@salesforce/apex/ProductController.updateOrderItem';
 
 const columns = [
     { label: 'Name', fieldName: 'Name' },
@@ -67,6 +63,7 @@ export default class ProductList extends LightningElement {
     orderItemName;
     orderItemQuantity;
     orderItemTotalCost;
+    orderItemProd;
     productsBeforeFilter = [];
     error;
     products = [];
@@ -213,12 +210,17 @@ export default class ProductList extends LightningElement {
         const row = event.detail.row;
         this.orderItemRowId = event.detail.row.Id;
         this.orderItemName = event.detail.row.Name;
+        this.orderItemProd = event.detail.row.Product__c;
         this.orderItemQuantity = event.detail.row.Quantity__c;
         this.orderItemTotalCost = event.detail.row.Total_Cost__c;
         this.orderItems = JSON.parse(JSON.stringify(this.orderItems));
 
-        if (actionName === 'buy') {
-            
+        if (actionName === 'buy') { 
+            updateOrderItem({   orderItemId: this.orderItemRowId,
+                                changedQuantity: this.orderItemQuantity,
+                                changedTotalCost: this.orderItemTotalCost
+            });
+
             createOrder({   orderName : this.orderItemName,
                             orderItemId : this.orderItemRowId
             });
@@ -229,20 +231,43 @@ export default class ProductList extends LightningElement {
             });
    
         } else if (actionName === 'increase') {
+            console.log(this.orderItemProd);
             for(let i = 0; i < this.orderItems.length; i++) {
                 if (this.orderItems[i].Id === this.orderItemRowId) {
-                    this.orderItems[i].Quantity__c++;
-                    console.log(this.orderItems[i].Quantity__c);
+                    console.log(this.checkProduct());
+                    if(this.checkProduct()) {
+                        this.orderItems[i].Quantity__c++;
+                        this.orderItems[i].Total_Cost__c += this.orderItems[i].Total_Cost__c/this.orderItemQuantity;
+                        console.log(this.orderItems[i].Quantity__c);
+                        console.log(this.orderItems[i].Total_Cost__c);   
+                    }
                 }
             }
+            console.log(this.orderItemQuantity);
             
         } else if (actionName === 'decrease') {
             for(let i = 0; i < this.orderItems.length; i++) {
                 if (this.orderItems[i].Id === this.orderItemRowId) {
-                    this.orderItems[i].Quantity__c--;
-                    console.log(this.orderItems[i].Quantity__c);
+                    if (this.orderItems[i].Quantity__c > 1) {
+                        this.orderItems[i].Quantity__c--;
+                        this.orderItems[i].Total_Cost__c -= this.orderItems[i].Total_Cost__c/this.orderItemQuantity;
+                        console.log(this.orderItems[i].Quantity__c);
+                        console.log(this.orderItems[i].Total_Cost__c);
+                    }
                 }
             }
         }
+    }
+
+    checkProduct() {
+        for (let i = 0; i < this.products.length; i++) {
+            if (this.products[i].Id === this.orderItemProd) {
+                if (this.orderItemQuantity < this.products[i].Quantity__c) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }   
     }
 }
