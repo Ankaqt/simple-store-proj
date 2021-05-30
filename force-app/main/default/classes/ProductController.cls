@@ -19,7 +19,7 @@ public with sharing class ProductController {
 
     @AuraEnabled
     public static List<Order_Item__c> getOrderItemList() {
-        return [SELECT Id, Name, Product__c, Total_Cost__c, Quantity__c FROM Order_Item__c];
+        return [SELECT Id, Name, Product__c, Total_Cost__c, Quantity__c FROM Order_Item__c WHERE Status__c =: 'In cart'];
     }
 
     @AuraEnabled
@@ -46,10 +46,17 @@ public with sharing class ProductController {
         System.debug('new Order'+ newOrder);
         insert newOrder;
 
-        Order_Item__c orderItem = [SELECT Quantity__c, Product__c FROM Order_Item__c WHERE id =: orderItemId];
+        Order_Item__c orderItem = [SELECT Quantity__c, Product__c, Status__c FROM Order_Item__c WHERE id =: orderItemId];
+        orderItem.Status__c = 'In order';
+        update orderItem;
         Id idPro = orderItem.Product__c;
         Product__c prod = [SELECT Quantity__c FROM Product__c WHERE id =: idPro];
         prod.Quantity__c = prod.Quantity__c - orderItem.Quantity__c;
         update prod;
+    }
+
+    @AuraEnabled
+    public static List<Order_Item__c> getOrderItemsInOrder(){
+        return [SELECT Id, Name, Product__c, Total_Cost__c, Quantity__c FROM Order_Item__c WHERE Status__c =: 'In order'];
     }
 }

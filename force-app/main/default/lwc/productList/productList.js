@@ -5,6 +5,7 @@ import getOrderItemList from '@salesforce/apex/ProductController.getOrderItemLis
 import clearOrderItem from '@salesforce/apex/ProductController.clearOrderItem';
 import createOrder from '@salesforce/apex/ProductController.createOrder';
 import updateOrderItem from '@salesforce/apex/ProductController.updateOrderItem';
+import getOrderItemsInOrder from '@salesforce/apex/ProductController.getOrderItemsInOrder';
 
 const columns = [
     { label: 'Name', fieldName: 'Name' },
@@ -48,7 +49,13 @@ const orderItemColumns = [
         disabled: false,    
         iconPosition: 'left',
     }}
-]
+];
+
+const orderItemColumnsInOrder = [
+    {label: 'Name', fieldName: 'Name'},
+    {label: 'Total cost', fieldName: 'Total_Cost__c', type: 'currency', typeAttributes: { currencyCode: 'USD' }},
+    {label: 'Quantity', fieldName: 'Quantity__c'}
+];
 
 export default class ProductList extends LightningElement {
     
@@ -68,11 +75,15 @@ export default class ProductList extends LightningElement {
     error;
     products = [];
     orderItems = [];
+    orderItemInOrder = [];
     productColumns = columns;
     cartColumns = orderItemColumns;
+    orderColumns = orderItemColumnsInOrder;
     isModalOpen = false;
     isInsertSuccessfull = false;
     isModalOpenCart = false;
+    isOrderCreated = false;
+    isModalOpenOrders = false;
 
     openModalCart() {
         this.isModalOpenCart = true;
@@ -82,8 +93,12 @@ export default class ProductList extends LightningElement {
         this.isModalOpenCart = false;
     }
 
-    submitDetailsCart() {
-        this.isModalOpenCart = false;
+    openModalOrder(){
+        this.isModalOpenOrders = true;
+    }
+
+    closeModalOrder(){
+        this.isModalOpenOrders = false;
     }
 
     openModal() {
@@ -224,6 +239,8 @@ export default class ProductList extends LightningElement {
             createOrder({   orderName : this.orderItemName,
                             orderItemId : this.orderItemRowId
             });
+            this.orderItems = this.orderItems.filter(orderItem => row.Id !== orderItem.Id);
+            this.isOrderCreated = true;
 
         } else if (actionName === 'clear') {
             this.orderItems = this.orderItems.filter(orderItem => row.Id !== orderItem.Id);
@@ -269,5 +286,22 @@ export default class ProductList extends LightningElement {
                 }
             }
         }   
+    }
+
+    openOrders() {
+        this.openModalOrder();
+        this.getOrderItemsInOrder();
+    }
+
+    getOrderItemsInOrder() {
+        return getOrderItemsInOrder({})
+        .then(result => {
+            console.log(result);
+            if(result != null) {
+                this.orderItemInOrder = result;
+            }
+        }).catch(error => {
+            this.error = error;
+        });
     }
 }
